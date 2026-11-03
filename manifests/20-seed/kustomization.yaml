@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- gardenlet.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+- name: stackit
+  namespace: garden
+  files:
+  - ../00-providers/serviceaccount.json
+# We reuse the same credentials in the demo setup
+- name: backup-s3
+  namespace: garden
+  envs:
+  - ../00-providers/backup-s3-credentials.env
+
+patches:
+# cannot use envsubst inside secretGenerator
+- patch: |
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: stackit
+      namespace: garden
+    stringData:
+      project-id: ${PROJECT_ID}

@@ -1,0 +1,35 @@
+apiVersion: operator.gardener.cloud/v1alpha1
+kind: Extension
+metadata:
+  name: provider-stackit
+spec:
+  resources:
+  - kind: Bastion
+    type: stackit
+  - kind: ControlPlane
+    type: stackit
+  - kind: Infrastructure
+    type: stackit
+  - kind: Worker
+    type: stackit
+  - kind: DNSRecord
+    type: stackit
+  deployment:
+    admission:
+      runtimeCluster:
+        helm:
+          ociRepository:
+            ref: ghcr.io/stackitcloud/gardener-extension-provider-stackit/charts/admission-stackit-runtime:v2.27.0
+      virtualCluster:
+        helm:
+          ociRepository:
+            ref: ghcr.io/stackitcloud/gardener-extension-provider-stackit/charts/admission-stackit-virtual-garden:v2.27.0
+    extension:
+      helm:
+        ociRepository:
+          ref: ghcr.io/stackitcloud/gardener-extension-provider-stackit/charts/gardener-extension-provider-stackit:v2.27.0
+      values:
+        config:
+          etcd:
+            storage:
+              provisioner: cinder.csi.openstack.org # runtime cluster is provided by SKE, so we use the OpenStack CSI driver for storage

@@ -1,0 +1,94 @@
+apiVersion: seedmanagement.gardener.cloud/v1alpha1
+kind: Gardenlet
+metadata:
+  name: runtime
+  namespace: garden
+spec:
+  deployment:
+    replicaCount: 2
+    revisionHistoryLimit: 2
+    helm:
+      ociRepository:
+        ref: europe-docker.pkg.dev/gardener-project/releases/charts/gardener/gardenlet:${GARDENER_VERSION}
+  config:
+    apiVersion: gardenlet.config.gardener.cloud/v1alpha1
+    kind: GardenletConfiguration
+    featureGates: {}
+    controllers:
+      shoot:
+        reconcileInMaintenanceOnly: true
+    logging:
+      enabled: true
+      vali:
+        enabled: false
+      victoriaLogs:
+        enabled: true
+    seedConfig:
+      spec:
+        backup:
+          provider: S3
+          region: ${REGION}
+          credentialsRef:
+            apiVersion: v1
+            kind: Secret
+            name: backup-s3
+            namespace: garden
+        # blockCIDRs:
+        # - 169.254.169.254/32
+        dns:
+          internal:
+            credentialsRef:
+              apiVersion: v1
+              kind: Secret
+              name: stackit
+              namespace: garden
+            domain: internal.${DOMAIN}
+            type: stackit
+          defaults:
+          - credentialsRef:
+              apiVersion: v1
+              kind: Secret
+              name: stackit
+              namespace: garden
+            domain: s.${DOMAIN}
+            type: stackit
+          provider:
+            type: stackit
+            credentialsRef:
+              apiVersion: v1
+              kind: Secret
+              name: stackit
+              namespace: garden
+        ingress:
+          domain: internal.${DOMAIN}
+          controller:
+            kind: nginx
+        networks:
+          nodes: 10.250.0.0/16
+          pods: 100.64.0.0/13
+          services: 100.82.0.0/16
+          shootDefaults:
+            pods: 10.244.0.0/16
+            services: 10.96.0.0/16
+        provider:
+          zones:
+          - ${REGION}-1
+          - ${REGION}-2
+          - ${REGION}-3
+          region: ${REGION}
+          type: stackit
+        settings:
+          excessCapacityReservation:
+            enabled: false
+          loadBalancerServices:
+            proxyProtocol:
+              allowed: true
+            annotations:
+              lb.stackit.cloud/tcp-proxy-protocol: "true"
+            zonalIngress:
+              enabled: false
+          verticalPodAutoscaler:
+            # On the initial cluster, we use the VPA managed by gardener-operator.
+            enabled: false
+          scheduling:
+            visible: true

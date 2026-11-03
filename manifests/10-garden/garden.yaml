@@ -1,0 +1,83 @@
+apiVersion: operator.gardener.cloud/v1alpha1
+kind: Garden
+metadata:
+  name: garden
+spec:
+  extensions:
+  - type: controlplane-cert-service
+    providerConfig:
+      apiVersion: service.cert.extensions.gardener.cloud/v1alpha1
+      kind: CertConfig
+      generateControlPlaneCertificate: true
+  dns:
+    providers:
+    - name: stackit
+      type: stackit
+      secretRef:
+        name: stackit
+  runtimeCluster:
+    ingress:
+      controller:
+        kind: nginx
+      domains:
+      - name: gardener.${DOMAIN}
+        provider: stackit
+    networking:
+      nodes:
+      - 10.250.0.0/16
+      pods:
+      - 100.64.0.0/13
+      services:
+      - 100.82.0.0/16
+    provider:
+      region: eu02
+      zones:
+      - eu02-1
+      - eu02-2
+      - eu02-3
+    settings:
+      verticalPodAutoscaler:
+        enabled: true
+      topologyAwareRouting:
+        enabled: false
+      loadBalancerServices:
+        proxyProtocol:
+          allowed: true
+        annotations:
+          lb.stackit.cloud/tcp-proxy-protocol: "true"
+  virtualCluster:
+    controlPlane:
+      highAvailability: {}
+    dns:
+      domains:
+      - name: virtual-garden.${DOMAIN}
+        provider: stackit
+    etcd:
+      main:
+        backup:
+          region: eu02
+          provider: S3
+          bucketName: ${CLUSTER_NAME}-backup
+          secretRef:
+            name: virtual-garden-etcd-main-backup
+        storage:
+          capacity: 25Gi
+          className: premium-perf6-stackit
+      events:
+        storage:
+          capacity: 10Gi
+          className: premium-perf6-stackit
+    kubernetes:
+      version: 1.36.4
+    gardener:
+      clusterIdentity: gg-demo
+      gardenerDashboard:
+        frontendConfigMapRef:
+          name: gardener-dashboard-frontend-config
+    maintenance:
+      timeWindow:
+        begin: 220000+0100
+        end: 230000+0100
+    networking:
+      services:
+      - 100.72.0.0/13

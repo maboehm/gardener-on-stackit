@@ -1,0 +1,86 @@
+apiVersion: core.gardener.cloud/v1beta1
+kind: CloudProfile
+metadata:
+  name: stackit
+spec:
+  type: stackit
+  machineCapabilities:
+  - name: architecture
+    values:
+    - amd64
+  kubernetes:
+    versions:
+    - version: 1.36.5
+    - version: 1.37.1
+  machineImages:
+  - name: flatcar
+    versions:
+    - version: 4593.2.5-containerd2.1.9
+      cri:
+      - name: containerd
+      capabilityFlavors:
+      - architecture:
+        - amd64
+  - name: ubuntu
+    versions:
+    - version: 2604.20260921.0
+      cri:
+      - name: containerd
+      capabilityFlavors:
+      - architecture:
+        - amd64
+  machineTypes:
+  - name: g3i.2
+    cpu: "2"
+    gpu: "0"
+    memory: 8Gi
+    capabilities:
+      architecture:
+      - amd64
+    storage:
+      type: storage_premium_perf1
+      size: 50Gi
+  regions:
+  - name: eu02
+    zones:
+    - name: eu02-1
+    - name: eu02-2
+    - name: eu02-3
+  volumeTypes:
+  - name: storage_premium_perf1
+    class: storage_premium_perf1
+    usable: true
+  - name: storage_premium_perf4
+    class: storage_premium_perf4
+    usable: true
+  providerConfig:
+    apiVersion: stackit.provider.extensions.gardener.cloud/v1alpha1
+    kind: CloudProfileConfig
+    machineImages:
+    - name: flatcar
+      versions:
+      - version: 4593.2.5-containerd2.1.9
+        regions:
+        - name: eu02
+          id: 055f51bf-219c-4bef-96a0-da85c06627e7
+          architecture: amd64
+    - name: ubuntu
+      versions:
+      - version: 2604.20260921.0
+        regions:
+        - name: eu02
+          id: 2d646c37-5698-49d5-9fce-8bf7d3bb0303
+          architecture: amd64
+    dnsServers:
+    - 8.8.8.8
+    - 1.1.1.1
+    rescanBlockStorageOnResize: true
+    nodeVolumeAttachLimit: 24
+    storageClasses:
+    - name: storage-premium-perf1
+      default: true
+      parameters:
+        type: storage-premium-perf1
+    - name: storage-premium-perf4
+      parameters:
+        type: storage_premium_perf4

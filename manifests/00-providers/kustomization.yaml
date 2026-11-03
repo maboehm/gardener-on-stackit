@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+- name: stackit
+  namespace: garden
+  files:
+  - serviceaccount.json
+- name: virtual-garden-etcd-main-backup
+  namespace: garden
+  envs:
+  - backup-s3-credentials.env
+
+resources:
+- stackit.yaml
+- backup-s3.yaml
+- cert-service.yaml
+
+patches:
+# cannot use envsubst inside secretGenerator
+- patch: |
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: stackit
+      namespace: garden
+    stringData:
+      project-id: ${PROJECT_ID}

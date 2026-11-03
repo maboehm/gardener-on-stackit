@@ -1,0 +1,28 @@
+apiVersion: operator.gardener.cloud/v1alpha1
+kind: Extension
+metadata:
+  annotations:
+    security.gardener.cloud/pod-security-enforce: baseline
+  name: extension-shoot-cert-service
+spec:
+  deployment:
+    extension:
+      helm:
+        ociRepository:
+          ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-cert-service:v1.66.0
+      injectGardenKubeconfig: true
+      runtimeClusterValues:
+        certificateConfig:
+          defaultIssuer:
+            acme:
+              email: ${ACME_EMAIL}
+              server: https://acme-v02.api.letsencrypt.org/directory
+            name: garden
+  resources:
+  - clusterCompatibility:
+    - garden
+    kind: Extension
+    lifecycle:
+      reconcile: BeforeKubeAPIServer
+      delete: AfterKubeAPIServer
+    type: controlplane-cert-service

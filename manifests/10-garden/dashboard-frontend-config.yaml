@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gardener-dashboard-frontend-config
+  namespace: garden
+data:
+  frontend-config.yaml: |
+    shootDefaults:
+      nodesCIDR: 10.251.0.0/16
